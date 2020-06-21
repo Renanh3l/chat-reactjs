@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 import './App.css';
 
 // dps ver se é melhor aqui ou um useeffect
-const socket = io('http://localhost:3333');
+const socket = io('https://chatjs-backend.herokuapp.com');
 
 function App() {
   const [username, setUsername] = useState('');
@@ -13,14 +13,6 @@ function App() {
   socket.on('new message', data => {
     addChatMessage(data);
   })
-
-  /**
-   * Captura o nome de usuário de digitado e guarda
-   */
-  function handleInputChange(e) {
-    const name = e.target.value;
-    setUsername(name);
-  }
 
   /**
    * Usa o nome de usuário para emitir o login
