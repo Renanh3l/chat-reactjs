@@ -1,24 +1,89 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useState } from 'react';
+import io from 'socket.io-client';
 import './App.css';
 
+// dps ver se é melhor aqui ou um useeffect
+const socket = io('http://localhost:3333');
+
 function App() {
+  const [username, setUsername] = useState('');
+  const [chatMsg, setChatMsg] = useState('');
+  const [messages, setMessages] = useState([]);
+
+  socket.on('new message', data => {
+    addChatMessage(data);
+  })
+
+  /**
+   * Captura o nome de usuário de digitado e guarda
+   */
+  function handleInputChange(e) {
+    const name = e.target.value;
+    setUsername(name);
+  }
+
+  /**
+   * Usa o nome de usuário para emitir o login
+   */
+  function handleInputKeyDown(event) {
+    const ENTER_KEY = 13;
+
+    if (event.which === ENTER_KEY) {
+      socket.emit('add user', username);
+    }
+  }
+
+  const addChatMessage = (data) => {
+    setMessages([...messages, data])
+  }
+
+  function handleSendMessage(event) {
+    const ENTER_KEY = 13;
+
+    if (event.which === ENTER_KEY) {
+      if (username && chatMsg) {
+        event.target.value = ''; // Limpa o input
+        addChatMessage({
+          id: Date.now(),
+          username: username,
+          message: chatMsg
+        });
+        socket.emit('new message', chatMsg);
+      }
+    }
+  }
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+
+      <header>
+        <div className="login">
+          <div className="form">
+            <h3 className="title">What's your nickname?</h3>
+            <input onChange={e => setUsername(e.target.value)} onKeyDown={handleInputKeyDown} className="usernameInput" type="text" maxLength="14" />
+          </div>
+        </div>
       </header>
+
+      <div className="chat">
+        <div className="chatArea">
+          <ul className="messages">
+            {messages.map(message => {
+              return (
+                <li key={message.id} className="message">
+                  <span className="username">{message.username}</span>
+                  <span className="messageBody">
+                    {message.message}
+                  </span>
+                </li>
+              )
+            })}
+
+          </ul>
+        </div>
+        <input onKeyDown={handleSendMessage} onChange={e => setChatMsg(e.target.value)} className="inputMessage" placeholder="Type here..." />
+      </div>
+
     </div>
   );
 }
